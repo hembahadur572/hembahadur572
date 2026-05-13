@@ -54,7 +54,7 @@ motto: "it's not a bug, it's a feature... trust me"
 
 ### 🐍 the snake
 
-<img src="https://raw.githubusercontent.com/hembahadur572/hembahadur572/output/github-contribution-grid-snake-dark.svg" width="100%">
+<img src="https://raw.githubusercontent.com/hembahadur572/hembahadur572/main/assets/github-contribution-grid-snake-dark.svg" width="100%">
 
 ---
 

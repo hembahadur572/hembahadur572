@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ASCII Art Generator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/figlet/1.7.0/figlet.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg: #0a0a0f;
+            --surface: #13131a;
+            --surface2: #1c1c26;
+            --border: #2a2a3a;
+            --text: #e0e0e0;
+            --text-muted: #8888aa;
+            --accent: #00f5d4;
+            --accent-dim: rgba(0, 245, 212, 0.15);
+            --font-mono: 'Courier New', 'Consolas', monospace;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', -apple-system, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* HEADER */
+        header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 20px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        header h1 {
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+        header h1 span { color: var(--accent); }
+        header .subtitle {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        /* CONTENT */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            width: 100%;
+        }
+
+        /* TABS */
+        .tabs {
+            display: flex;
+            gap: 4px;
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 4px;
+            border: 1px solid var(--border);
+            overflow-x: auto;
+        }
+        .tab-btn {
+            padding: 10px 24px;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 14px;
+            font-weight: 500;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .tab-btn:hover { color: var(--text); background: var(--surface2); }
+        .tab-btn.active {
+            background: var(--accent-dim);
+            color: var(--accent);
+        }
+
+        /* PANELS */
+        .panel { display: none; }
+        .panel.active { display: block; }
+
+        /* CONTROLS */
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: flex-end;
+        }
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .control-group label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        input, select, textarea {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 8px;
+            padding: 8px 14px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.2s;
+            outline: none;
+        }
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--accent);
+        }
+        textarea {
+            width: 100%;
+            min-height: 80px;
+            resize: vertical;
+            font-family: var(--font-mono);
+            line-height: 1.5;
+        }
+
+        .btn {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 8px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn:hover { background: var(--border); }
+        .btn-primary {
+            background: var(--accent);
+            color: #001219;
+            border-color: var(--accent);
+            font-weight: 600;
+        }
+        .btn-primary:hover {
+            background: #00d4b8;
+            box-shadow: 0 0 20px rgba(0, 245, 212, 0.3);
+        }
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        /* OUTPUT */
+        .output-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .output-section .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .output-section .header h2 {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .output-box {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            overflow: auto;
+            min-height: 200px;
+            max-height: 500px;
+            font-family: var(--font-mono);
+            font-size: 10px;
+            line-height: 1.1;
+            white-space: pre;
+            color: var(--accent);
+        }
+        .output-box.color {
+            color: inherit;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+        }
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            left: 0; top: 0;
+            width: 100%; height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        /* SETTINGS ROW */
+        .settings-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+        }
+        .settings-row label {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        .settings-row input[type="range"] {
+            width: 120px;
+            padding: 0;
+            background: transparent;
+            accent-color: var(--accent);
+        }
+
+        /* COLOR OPTIONS */
+        .color-options {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .color-chip {
+            width: 28px; height: 28px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .color-chip:hover { transform: scale(1.15); }
+        .color-chip.active { border-color: #fff; box-shadow: 0 0 10px rgba(255,255,255,0.3); }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            header { padding: 16px; }
+            header h1 { font-size: 17px; }
+            .container { padding: 16px; gap: 16px; }
+            .controls { flex-direction: column; }
+            .output-box { font-size: 7px; min-height: 150px; }
+            .tabs .tab-btn { padding: 8px 14px; font-size: 13px; }
+        }
+
+        /* DROP ZONE */
+        .drop-zone {
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .drop-zone:hover, .drop-zone.dragover {
+            border-color: var(--accent);
+            background: var(--accent-dim);
+        }
+        .drop-zone .icon { font-size: 40px; margin-bottom: 8px; }
+        .drop-zone p { color: var(--text-muted); font-size: 14px; }
+        .drop-zone p strong { color: var(--accent); }
+
+        #image-preview {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 8px;
+            display: none;
+            margin-top: 12px;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div>
+        <h1>✦ <span>ASCII</span> Art Generator</h1>
+        <div class="subtitle">Text → Art · Image → ASCII</div>
+    </div>
+</header>
+
+<div class="container">
+
+    <!-- TABS -->
+    <div class="tabs">
+        <button class="tab-btn active" data-tab="text">⌨️ Text to ASCII</button>
+        <button class="tab-btn" data-tab="image">🖼️ Image to ASCII</button>
+    </div>
+
+    <!-- TEXT PANEL -->
+    <div class="panel active" id="panel-text">
+        <div class="controls">
+            <div class="control-group" style="flex:1">
+                <label>Your Text</label>
+                <textarea id="text-input" placeholder="Type something... e.g. HELLO, SACHIN!">SACHIN</textarea>
+            </div>
+            <div class="control-group">
+                <label>Font</label>
+                <select id="font-select">
+                    <option value="Big">Big</option>
+                    <option value="Standard">Standard</option>
+                    <option value="Slant">Slant</option>
+                    <option value="3D-ASCII">3D-ASCII</option>
+                    <option value="Banner">Banner</option>
+                    <option value="Big Money-ne">Big Money-ne</option>
+                    <option value="Block">Block</option>
+                    <option value="Cosmike">Cosmike</option>
+                    <option value="Cyberlarge">Cyberlarge</option>
+                    <option value="Doom">Doom</option>
+                    <option value="Epic">Epic</option>
+                    <option value="Ghost">Ghost</option>
+                    <option value="Graffiti">Graffiti</option>
+                    <option value="Larry 3D">Larry 3D</option>
+                    <option value="Ogre">Ogre</option>
+                    <option value="Pawp">Pawp</option>
+                    <option value="Peaks">Peaks</option>
+                    <option value="Rounded">Rounded</option>
+                    <option value="Small">Small</option>
+                    <option value="Star Wars">Star Wars</option>
+                    <option value="Tinker-Toy">Tinker-Toy</option>
+                    <option value="Train">Train</option>
+                    <option value="Twisted">Twisted</option>
+                    <option value="Univers">Univers</option>
+                    <option value="Wet Letter">Wet Letter</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label>Width</label>
+                <select id="width-select">
+                    <option value="80">80</option>
+                    <option value="100">100</option>
+                    <option value="120">120</option>
+                    <option value="150">150</option>
+                    <option value="200">200</option>
+                    <option value="0" selected>Auto</option>
+                </select>
+            </div>
+            <div class="btn-row">
+                <button class="btn btn-primary" id="generate-text">⚡ Generate</button>
+            </div>
+        </div>
+
+        <div class="output-section" style="margin-top:16px">
+            <div class="header">
+                <h2>📟 Output</h2>
+                <div class="btn-row">
+                    <button class="btn" id="copy-text">📋 Copy</button>
+                    <button class="btn" id="download-text">⬇️ Download</button>
+                </div>
+            </div>
+            <div class="output-box" id="text-output">
+                _  _    ___ ___
+                | || |  / __|_ _|
+                | __ | | (__ | |
+                |_||_|  \___|___|
+
+            </div>
+        </div>
+    </div>
+
+    <!-- IMAGE PANEL -->
+    <div class="panel" id="panel-image">
+        <div class="settings-row">
+            <div class="control-group">
+                <label>Character Width</label>
+                <input type="range" id="char-width" min="40" max="200" value="100" />
+                <span id="char-width-val" style="font-size:12px;color:var(--text-muted)">100</span>
+            </div>
+            <div class="control-group">
+                <label>Character Set</label>
+                <select id="char-set">
+                    <option value="standard">Standard ░▒▓█</option>
+                    <option value="detailed" selected>Detailed @%#*+=-:. </option>
+                    <option value="blocks">Blocks █▓▒░ </option>
+                    <option value="simple">Simple ░▒▓█</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label>Color Mode</label>
+                <select id="color-mode">
+                    <option value="none">Monochrome</option>
+                    <option value="ansi" selected>ANSI Color</option>
+                    <option value="html">HTML Color</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label>Invert</label>
+                <select id="invert-mode">
+                    <option value="false">Normal</option>
+                    <option value="true">Inverted</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="drop-zone" id="drop-zone">
+            <div class="icon">🖼️</div>
+            <p><strong>Click</strong> to upload or <strong>drag & drop</strong> an image</p>
+            <p style="font-size:12px;margin-top:4px">PNG, JPG, WEBP, GIF</p>
+            <input type="file" id="file-input" accept="image/*" style="display:none" />
+            <img id="image-preview" alt="Preview" />
+        </div>
+
+        <div class="btn-row" style="margin-top:12px">
+            <button class="btn btn-primary" id="convert-image">🎨 Convert to ASCII</button>
+        </div>
+
+        <div class="output-section" style="margin-top:16px">
+            <div class="header">
+                <h2>📟 Output</h2>
+                <div class="btn-row">
+                    <button class="btn" id="copy-image">📋 Copy</button>
+                    <button class="btn" id="download-image">⬇️ Download</button>
+                </div>
+            </div>
+            <div class="output-box" id="image-output">
+                Upload an image and click Convert ✨
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // ============ TABS ============
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+        });
+    });
+
+    // ============ TEXT TO ASCII ============
+    const textInput = document.getElementById('text-input');
+    const fontSelect = document.getElementById('font-select');
+    const widthSelect = document.getElementById('width-select');
+    const textOutput = document.getElementById('text-output');
+    const generateBtn = document.getElementById('generate-text');
+
+    async function generateText() {
+        const text = textInput.value.trim() || 'Hello!';
+        const font = fontSelect.value;
+        const width = parseInt(widthSelect.value) || 80;
+
+        try {
+            textOutput.textContent = 'Generating... ⏳';
+            const result = await new Promise((resolve, reject) => {
+                figlet.text(text, {
+                    font: font,
+                    horizontalLayout: 'default',
+                    verticalLayout: 'default',
+                    width: width,
+                }, (err, data) => {
+                    if (err) reject(err);
+                    else resolve(data);
+                });
+            });
+            textOutput.textContent = result || '(empty)';
+        } catch (e) {
+            textOutput.textContent = `Error: ${e.message}. Try another font.`;
+        }
+    }
+
+    generateBtn.addEventListener('click', generateText);
+    textInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && e.ctrlKey) generateText();
+    });
+
+    // Initial generation
+    setTimeout(generateText, 500);
+
+    // Copy text output
+    document.getElementById('copy-text').addEventListener('click', () => {
+        navigator.clipboard.writeText(textOutput.textContent).then(() => {
+            const btn = document.getElementById('copy-text');
+            btn.textContent = '✅ Copied!';
+            setTimeout(() => btn.textContent = '📋 Copy', 1500);
+        });
+    });
+
+    // Download text output
+    document.getElementById('download-text').addEventListener('click', () => {
+        const blob = new Blob([textOutput.textContent], { type: 'text/plain' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'ascii-art.txt';
+        a.click();
+    });
+
+    // ============ IMAGE TO ASCII ============
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('file-input');
+    const imagePreview = document.getElementById('image-preview');
+    const convertBtn = document.getElementById('convert-image');
+    const imageOutput = document.getElementById('image-output');
+    const charWidthSlider = document.getElementById('char-width');
+    const charWidthVal = document.getElementById('char-width-val');
+    const charSetSelect = document.getElementById('char-set');
+    const colorModeSelect = document.getElementById('color-mode');
+    const invertSelect = document.getElementById('invert-mode');
+
+    let uploadedImage = null;
+
+    const CHAR_SETS = {
+        'standard': ' .,:;ox%#@',
+        'detailed': ' .:-=+*#%@',
+        'blocks': ' ░▒▓█',
+        'simple': ' ░▒▓█'
+    };
+
+    // Slider
+    charWidthSlider.addEventListener('input', () => {
+        charWidthVal.textContent = charWidthSlider.value;
+    });
+
+    // Drop zone click
+    dropZone.addEventListener('click', () => fileInput.click());
+
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files[0]) {
+            loadImage(e.target.files[0]);
+        }
+    });
+
+    // Drag and drop
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('dragover');
+    });
+    dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('dragover');
+    });
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+            loadImage(e.dataTransfer.files[0]);
+        }
+    });
+
+    function loadImage(file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+                uploadedImage = img;
+                imagePreview.src = e.target.result;
+                imagePreview.style.display = 'block';
+                dropZone.querySelector('p').textContent = '📸 Image loaded!';
+                dropZone.querySelector('.icon').textContent = '✅';
+                // Auto-convert
+                convertImage();
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function getCharSet(name) {
+        return CHAR_SETS[name] || CHAR_SETS['detailed'];
+    }
+
+    function convertImage() {
+        if (!uploadedImage) {
+            imageOutput.textContent = '⚠️ Please upload an image first!';
+            return;
+        }
+
+        const targetWidth = parseInt(charWidthSlider.value);
+        const chars = getCharSet(charSetSelect.value);
+        const colorMode = colorModeSelect.value;
+        const invert = invertSelect.value === 'true';
+
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Calculate dimensions maintaining aspect ratio
+        const aspect = uploadedImage.height / uploadedImage.width;
+        const w = targetWidth;
+        // Character aspect: roughly 0.55 (width:height ratio of monospace chars)
+        const h = Math.floor(w * aspect * 0.5);
+
+        canvas.width = w;
+        canvas.height = h;
+        ctx.drawImage(uploadedImage, 0, 0, w, h);
+
+        const imageData = ctx.getImageData(0, 0, w, h);
+        const data = imageData.data;
+
+        let result = '';
+        let colored = (colorMode !== 'none');
+
+        for (let y = 0; y < h; y++) {
+            for (let x = 0; x < w; x++) {
+                const idx = (y * w + x) * 4;
+                let r = data[idx];
+                let g = data[idx + 1];
+                let b = data[idx + 2];
+                const a = data[idx + 3];
+
+                if (a < 128) {
+                    result += ' ';
+                    continue;
+                }
+
+                // Grayscale
+                let gray = 0.299 * r + 0.587 * g + 0.114 * b;
+                if (invert) gray = 255 - gray;
+
+                const charIdx = Math.floor((gray / 255) * (chars.length - 1));
+                const char = chars[chars.length - 1 - charIdx];
+
+                if (colored) {
+                    // ANSI color
+                    const ri = Math.round(r / 51);
+                    const gi = Math.round(g / 51);
+                    const bi = Math.round(b / 51);
+                    const ansiCode = 16 + (ri * 36) + (gi * 6) + bi;
+                    if (colorMode === 'ansi') {
+                        result += `\x1b[38;5;${ansiCode}m${char}\x1b[0m`;
+                    } else {
+                        // HTML color spans don't work in pre, use inline style
+                        const hex = '#' + [r,g,b].map(c => c.toString(16).padStart(2,'0')).join('');
+                        result += `<span style="color:${hex}">${char}</span>`;
+                    }
+                } else {
+                    result += char;
+                }
+            }
+            result += '\n';
+        }
+
+        if (colorMode === 'html') {
+            imageOutput.innerHTML = result;
+            imageOutput.classList.add('color');
+        } else {
+            imageOutput.textContent = result;
+            imageOutput.classList.remove('color');
+        }
+    }
+
+    convertBtn.addEventListener('click', convertImage);
+
+    // Copy image output
+    document.getElementById('copy-image').addEventListener('click', () => {
+        const text = imageOutput.classList.contains('color')
+            ? imageOutput.textContent
+            : imageOutput.textContent;
+        navigator.clipboard.writeText(text).then(() => {
+            const btn = document.getElementById('copy-image');
+            btn.textContent = '✅ Copied!';
+            setTimeout(() => btn.textContent = '📋 Copy', 1500);
+        });
+    });
+
+    // Download image output
+    document.getElementById('download-image').addEventListener('click', () => {
+        const text = imageOutput.classList.contains('color')
+            ? imageOutput.textContent
+            : imageOutput.textContent;
+        const blob = new Blob([text], { type: 'text/plain' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'ascii-image.txt';
+        a.click();
+    });
+
+    // Settings change auto-convert if image loaded
+    charWidthSlider.addEventListener('change', () => { if (uploadedImage) convertImage(); });
+    charSetSelect.addEventListener('change', () => { if (uploadedImage) convertImage(); });
+    colorModeSelect.addEventListener('change', () => { if (uploadedImage) convertImage(); });
+    invertSelect.addEventListener('change', () => { if (uploadedImage) convertImage(); });
+</script>
+</body>
+</html>
